@@ -1,17 +1,217 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>
-      Tab 3
-    </ion-title>
+    <ion-title> Informations </ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Tab 3</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <!-- 🔍 ion-searchbar -->
+  <ion-searchbar placeholder="Cari informasi F1..."></ion-searchbar>
+  <!-- 📅 Kalender Balapan -->
+  <ion-list>
+    <ion-item lines="full">
+      <ion-label>
+        <h2>
+          <ion-text color="primary">Kalender Balapan 2025</ion-text>
+        </h2>
+        <p>Total <ion-badge color="success">24 Race</ion-badge></p>
+      </ion-label>
+      <ion-button slot="end" fill="outline" color="primary"
+        >📅 Jadwal</ion-button
+      >
+    </ion-item>
+  </ion-list>
 
-  <app-explore-container name="Tab 3 page"></app-explore-container>
+  <!-- 🔧 Tim & Mesin -->
+  <ion-list>
+    <ion-item lines="full">
+      <ion-label>
+        <h2>
+          <ion-text color="tertiary">Tim & Mesin</ion-text>
+        </h2>
+        <p>
+          4 Supplier:
+          <ion-badge color="success">Mercedes</ion-badge>,
+          <ion-badge color="danger">Ferrari</ion-badge>,
+          <ion-badge color="warning">Honda RBPT</ion-badge>,
+          <ion-badge color="medium">Renault</ion-badge>
+        </p>
+      </ion-label>
+      <ion-button slot="end" fill="outline" color="tertiary"
+        >🔧 Detail</ion-button
+      >
+    </ion-item>
+  </ion-list>
+
+  <!-- 📘 Aturan Baru -->
+  <ion-list>
+    <ion-item lines="full">
+      <ion-label>
+        <h2>
+          <ion-text color="danger">Aturan Baru 2025</ion-text>
+        </h2>
+        <p>
+          Batas Biaya <ion-badge color="tertiary">$135 Juta</ion-badge>, Ban
+          <ion-badge color="medium">Compound Baru</ion-badge>
+        </p>
+      </ion-label>
+      <ion-button slot="end" fill="outline" color="danger"
+        >📘 Pelajari</ion-button
+      >
+    </ion-item>
+  </ion-list>
+
+  <!-- 🧭 Breadcrumbs -->
+  <ion-breadcrumbs>
+    <ion-breadcrumb href="#home">🏠 Home</ion-breadcrumb>
+    <ion-breadcrumb href="#f1">🏎️ Formula 1</ion-breadcrumb>
+    <ion-breadcrumb href="#dashboard">📊 Dashboard</ion-breadcrumb>
+  </ion-breadcrumbs>
+
+  <!-- 💬 Statement Drivers -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Charles Leclerc</ion-card-title>
+      <ion-card-subtitle>Ferrari</ion-card-subtitle>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-text color="danger">
+        "Target saya jelas: membawa Ferrari kembali meraih kemenangan."
+      </ion-text>
+      <div class="ion-padding-top">
+        <ion-checkbox>Setuju dengan statement ini</ion-checkbox>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Max Verstappen</ion-card-title>
+      <ion-card-subtitle>Red Bull Racing</ion-card-subtitle>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-text color="medium">
+        "Musim ini akan menjadi tantangan besar, tapi saya siap mempertahankan
+        gelar."
+      </ion-text>
+      <div class="ion-padding-top">
+        <ion-checkbox>Setuju dengan statement ini</ion-checkbox>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Lando Norris</ion-card-title>
+      <ion-card-subtitle>McLaren</ion-card-subtitle>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-text color="secondary">
+        "McLaren makin kompetitif, dan saya yakin kami bisa bersaing untuk
+        podium."
+      </ion-text>
+      <div class="ion-padding-top">
+        <ion-checkbox>Setuju dengan statement ini</ion-checkbox>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- ➕ Floating Action Button -->
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button>
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+
+  <ion-datetime></ion-datetime>
+
+  <ion-list>
+    <!-- Text -->
+    <ion-item>
+      <ion-input label="Text input" placeholder="Enter text"></ion-input>
+    </ion-item>
+
+    <!-- Number -->
+    <ion-item>
+      <ion-input
+        label="Number input"
+        type="number"
+        placeholder="000"
+      ></ion-input>
+    </ion-item>
+
+    <!-- Password -->
+    <ion-item>
+      <ion-input
+        label="Password input"
+        type="password"
+        placeholder="••••••"
+      ></ion-input>
+    </ion-item>
+
+    <!-- Email -->
+    <ion-item>
+      <ion-input
+        label="Email input"
+        type="email"
+        placeholder="email@domain.com"
+      ></ion-input>
+    </ion-item>
+
+    <!-- Telephone -->
+    <ion-item>
+      <ion-input
+        label="Telephone input"
+        type="tel"
+        placeholder="888-888-8888"
+      ></ion-input>
+    </ion-item>
+
+    <!-- Date -->
+    <ion-item>
+      <ion-input label="Date input" type="date"></ion-input>
+    </ion-item>
+
+    <!-- Time -->
+    <ion-item>
+      <ion-input label="Time input" type="time"></ion-input>
+    </ion-item>
+
+    <!-- URL -->
+    <ion-item>
+      <ion-input
+        label="URL input"
+        type="url"
+        placeholder="https://example.com"
+      ></ion-input>
+    </ion-item>
+
+    <!-- Search -->
+    <ion-item>
+      <ion-input
+        label="Search input"
+        type="search"
+        placeholder="Search..."
+      ></ion-input>
+    </ion-item>
+
+    <!-- Textarea -->
+    <ion-item>
+      <ion-textarea
+        label="Textarea input"
+        placeholder="Enter multiple lines of text"
+      ></ion-textarea>
+    </ion-item>
+
+    <ion-text color="secondary">
+      <h2>Action Sheet Components</h2>
+    </ion-text>
+    <ion-button id="open-action-sheet">Open</ion-button>
+    <ion-action-sheet
+      trigger="open-action-sheet"
+      header="Actions"
+      [buttons]="actionSheetButtons"
+    >
+    </ion-action-sheet>
+  </ion-list>
 </ion-content>

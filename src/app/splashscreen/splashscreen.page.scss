@@ -1,0 +1,18 @@
+.splash-section {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  background-color: gainsboro;
+}
+
+.img {
+  margin-bottom: 30px;
+  width: 100px;
+}
+
+.small {
+  color: red;
+  margin-top: 20px;
+}
