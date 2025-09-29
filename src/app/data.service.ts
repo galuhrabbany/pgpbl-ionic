@@ -11,6 +11,7 @@ export class DataService {
     const pointsRef = ref(database, 'points');
     return push(pointsRef, point);
   }
+
   getPoints() {
     const pointsRef = ref(database, 'points');
     return new Promise((resolve, reject) => {
@@ -25,5 +26,30 @@ export class DataService {
         }
       );
     });
+  }
+
+  deletePoint(key: string) {
+    const pointRef = ref(database, `points/${key}`);
+    return remove(pointRef);
+  }
+
+  getPointById(key: string) {
+    const pointRef = ref(database, `points/${key}`);
+    return new Promise((resolve, reject) => {
+      get(pointRef).then((snapshot) => {
+        if (snapshot.exists()) {
+          resolve(snapshot.val());
+        } else {
+          reject('No data available');
+        }
+      }).catch((error) => {
+        reject(error);
+      });
+    });
+  }
+
+  updatePoint(key: string, point: { name: string; coordinates: string }) {
+    const pointRef = ref(database, `points/${key}`);
+    return update(pointRef, point);
   }
 }

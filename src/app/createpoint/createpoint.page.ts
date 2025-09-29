@@ -3,6 +3,7 @@ import { NavController, AlertController } from '@ionic/angular';
 import { DataService } from '../data.service';
 import * as L from 'leaflet';
 import { icon, Marker } from 'leaflet';
+import { ActivatedRoute, Router } from '@angular/router';
 
 const iconRetinaUrl = 'assets/marker-icon-2x.png';
 const iconUrl = 'assets/marker-icon.png';
@@ -27,76 +28,110 @@ Marker.prototype.options.icon = iconDefault;
 })
 export class CreatepointPage implements OnInit {
   map!: L.Map;
+  marker!: L.Marker;
 
+  pointId: string | null = null;
   name = '';
   coordinates = '';
+  pageTitle = 'Create Point';
 
   private navCtrl = inject(NavController);
   private alertCtrl = inject(AlertController);
   private dataService = inject(DataService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   constructor() {}
 
   ngOnInit() {
+    this.pointId = this.route.snapshot.paramMap.get('id');
+    if (this.pointId) {
+      this.pageTitle = 'Edit Point';
+      this.loadPointData();
+    }
+
     setTimeout(() => {
-      this.map = L.map('mapcreate').setView([-7.7956, 110.3695], 13);
-
-      var osm = L.tileLayer(
-        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-        {
-          attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        }
-      );
-
-      // Esri World Imagery
-      var esri = L.tileLayer(
-        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-        {
-          attribution: 'ESRI',
-        }
-      );
-
-      osm.addTo(this.map);
-
-      // Layer control
-      var baseMaps = {
-        OpenStreetMap: osm,
-        'Esri World Imagery': esri,
-      };
-
-      L.control.layers(baseMaps).addTo(this.map);
-
-      var tooltip =
-        'Drag the marker or move the map<br>to change the coordinates<br>of the location';
-      var marker = L.marker([-7.7956, 110.3695], { draggable: true });
-      marker.addTo(this.map);
-      marker.bindPopup(tooltip);
-      marker.openPopup();
-
-      //Dragend marker
-      marker.on('dragend', (e) => {
-        let latlng = e.target.getLatLng();
-        let lat = latlng.lat.toFixed(9);
-        let lng = latlng.lng.toFixed(9);
-
-        // push lat lng to coordinates input
-        this.coordinates = lat + ',' + lng;
-
-        console.log(this.coordinates);
-      });
+      this.setupMap();
     });
+  }
+
+  setupMap() {
+    let initialCoords: L.LatLngExpression = [-7.7956, 110.3695];
+    if (this.coordinates) {
+      initialCoords = this.coordinates.split(',').map(c => parseFloat(c)) as L.LatLngExpression;
+    }
+
+    this.map = L.map('mapcreate').setView(initialCoords, 13);
+
+    var osm = L.tileLayer(
+      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      }
+    );
+
+    var esri = L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      {
+        attribution: 'ESRI',
+      }
+    );
+
+    osm.addTo(this.map);
+
+    var baseMaps = {
+      OpenStreetMap: osm,
+      'Esri World Imagery': esri,
+    };
+
+    L.control.layers(baseMaps).addTo(this.map);
+
+    var tooltip =
+      'Drag the marker or move the map<br>to change the coordinates<br>of the location';
+    this.marker = L.marker(initialCoords, { draggable: true });
+    this.marker.addTo(this.map);
+    this.marker.bindPopup(tooltip);
+    this.marker.openPopup();
+
+    this.marker.on('dragend', (e) => {
+      let latlng = e.target.getLatLng();
+      let lat = latlng.lat.toFixed(9);
+      let lng = latlng.lng.toFixed(9);
+      this.coordinates = lat + ',' + lng;
+    });
+  }
+
+  async loadPointData() {
+    if (this.pointId) {
+      try {
+        const point: any = await this.dataService.getPointById(this.pointId);
+        this.name = point.name;
+        this.coordinates = point.coordinates;
+        if (this.map) { // If map is already initialized
+          const newCoords = this.coordinates.split(',').map(c => parseFloat(c)) as L.LatLngExpression;
+          this.map.setView(newCoords, 13);
+          this.marker.setLatLng(newCoords);
+        }
+      } catch (error) {
+        console.error('Error loading point data', error);
+      }
+    }
   }
 
   async save() {
     if (this.name && this.coordinates) {
       try {
-        await this.dataService.savePoint({
+        const pointData = {
           name: this.name,
           coordinates: this.coordinates,
-        });
-        // back to route maps
-        this.navCtrl.back;
+        };
+        if (this.pointId) {
+          await this.dataService.updatePoint(this.pointId, pointData);
+        } else {
+          await this.dataService.savePoint(pointData);
+        }
+        this.router.navigate(['/tabs/maps']);
       } catch (error: any) {
         const alert = await this.alertCtrl.create({
           header: 'Save Failed',

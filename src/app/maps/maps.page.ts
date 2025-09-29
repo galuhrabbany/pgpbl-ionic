@@ -1,6 +1,8 @@
 import { Component, OnInit, inject } from '@angular/core';
+import { AlertController } from '@ionic/angular';
 import * as L from 'leaflet';
 import { DataService } from '../data.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-maps',
@@ -10,10 +12,11 @@ import { DataService } from '../data.service';
 })
 export class MapsPage implements OnInit {
   map!: L.Map;
+  pointMarkers: L.Marker[] = [];
 
   private dataService = inject(DataService);
 
-  constructor() {
+  constructor(private alertCtrl: AlertController, private router: Router) {
     // ✅ Move your icon override here (runs when class is created)
     const iconRetinaUrl = 'assets/marker-icon-2x.png';
     const iconUrl = 'assets/marker-icon.png';
@@ -32,7 +35,35 @@ export class MapsPage implements OnInit {
     L.Marker.prototype.options.icon = iconDefault;
   }
 
+  async presentDeleteConfirm(key: string) {
+    const alert = await this.alertCtrl.create({
+      header: 'Konfirmasi Hapus',
+      message: 'Apakah Anda yakin ingin menghapus titik ini?',
+      buttons: [
+        {
+          text: 'Batal',
+          role: 'cancel',
+          cssClass: 'secondary',
+        },
+        {
+          text: 'Hapus',
+          handler: () => {
+            this.dataService.deletePoint(key).then(() => {
+              this.map.closePopup();
+              this.loadPoints();
+            });
+          },
+        },
+      ],
+    });
+
+    await alert.present();
+  }
+
   async loadPoints() {
+    this.pointMarkers.forEach((marker) => this.map.removeLayer(marker));
+    this.pointMarkers = [];
+
     const points: any = await this.dataService.getPoints();
     for (const key in points) {
       if (points.hasOwnProperty(key)) {
@@ -43,12 +74,51 @@ export class MapsPage implements OnInit {
         const marker = L.marker(coordinates as L.LatLngExpression).addTo(
           this.map
         );
-        marker.bindPopup(`${point.name}`);
+
+        const popupContent = `
+          ${point.name}<br>
+          <ion-button class="edit-button" data-key="${key}" color="warning" size="small">
+            <ion-icon name="create-outline"></ion-icon>
+          </ion-button>
+          <ion-button class="delete-button" data-key="${key}" color="danger" size="small">
+            <ion-icon name="trash-outline"></ion-icon>
+          </ion-button>
+        `;
+        marker.bindPopup(popupContent);
+        this.pointMarkers.push(marker);
       }
     }
 
     this.map.on('popupopen', (e) => {
       const popup = e.popup;
+      const deleteButton = popup.getElement()?.querySelector('.delete-button');
+      if (deleteButton) {
+        // Prevent multiple listeners
+        if (!(deleteButton as any)._clickListener) {
+          const listener = () => {
+            const key = deleteButton.getAttribute('data-key');
+            if (key) {
+              this.presentDeleteConfirm(key);
+            }
+          };
+          deleteButton.addEventListener('click', listener);
+          (deleteButton as any)._clickListener = listener;
+        }
+      }
+
+      const editButton = popup.getElement()?.querySelector('.edit-button');
+      if (editButton) {
+        if (!(editButton as any)._clickListener) {
+          const listener = () => {
+            const key = editButton.getAttribute('data-key');
+            if (key) {
+              this.router.navigate(['/createpoint', key]);
+            }
+          };
+          editButton.addEventListener('click', listener);
+          (editButton as any)._clickListener = listener;
+        }
+      }
     });
   }
 
