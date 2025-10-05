@@ -13,11 +13,12 @@ import { Router } from '@angular/router';
 export class MapsPage implements OnInit {
   map!: L.Map;
   pointMarkers: L.Marker[] = [];
+  pointsLayer = L.layerGroup(); // ✅ layer group for all points
 
   private dataService = inject(DataService);
 
   constructor(private alertCtrl: AlertController, private router: Router) {
-    // ✅ Move your icon override here (runs when class is created)
+    // ✅ Default marker icon setup
     const iconRetinaUrl = 'assets/marker-icon-2x.png';
     const iconUrl = 'assets/marker-icon.png';
     const shadowUrl = 'assets/marker-shadow.png';
@@ -31,7 +32,6 @@ export class MapsPage implements OnInit {
       tooltipAnchor: [16, -28],
       shadowSize: [41, 41],
     });
-
     L.Marker.prototype.options.icon = iconDefault;
   }
 
@@ -61,7 +61,8 @@ export class MapsPage implements OnInit {
   }
 
   async loadPoints() {
-    this.pointMarkers.forEach((marker) => this.map.removeLayer(marker));
+    // ✅ Clear old markers
+    this.pointsLayer.clearLayers();
     this.pointMarkers = [];
 
     const points: any = await this.dataService.getPoints();
@@ -71,9 +72,7 @@ export class MapsPage implements OnInit {
         const coordinates = point.coordinates
           .split(',')
           .map((c: string) => parseFloat(c));
-        const marker = L.marker(coordinates as L.LatLngExpression).addTo(
-          this.map
-        );
+        const marker = L.marker(coordinates as L.LatLngExpression);
 
         const popupContent = `
           ${point.name}<br>
@@ -84,40 +83,34 @@ export class MapsPage implements OnInit {
             <ion-icon name="trash-outline"></ion-icon>
           </ion-button>
         `;
+
         marker.bindPopup(popupContent);
+        marker.addTo(this.pointsLayer); // ✅ Add to overlay group
         this.pointMarkers.push(marker);
       }
     }
 
+    // ✅ Attach click handlers for popup buttons
     this.map.on('popupopen', (e) => {
       const popup = e.popup;
       const deleteButton = popup.getElement()?.querySelector('.delete-button');
-      if (deleteButton) {
-        // Prevent multiple listeners
-        if (!(deleteButton as any)._clickListener) {
-          const listener = () => {
-            const key = deleteButton.getAttribute('data-key');
-            if (key) {
-              this.presentDeleteConfirm(key);
-            }
-          };
-          deleteButton.addEventListener('click', listener);
-          (deleteButton as any)._clickListener = listener;
-        }
+      if (deleteButton && !(deleteButton as any)._clickListener) {
+        const listener = () => {
+          const key = deleteButton.getAttribute('data-key');
+          if (key) this.presentDeleteConfirm(key);
+        };
+        deleteButton.addEventListener('click', listener);
+        (deleteButton as any)._clickListener = listener;
       }
 
       const editButton = popup.getElement()?.querySelector('.edit-button');
-      if (editButton) {
-        if (!(editButton as any)._clickListener) {
-          const listener = () => {
-            const key = editButton.getAttribute('data-key');
-            if (key) {
-              this.router.navigate(['/createpoint', key]);
-            }
-          };
-          editButton.addEventListener('click', listener);
-          (editButton as any)._clickListener = listener;
-        }
+      if (editButton && !(editButton as any)._clickListener) {
+        const listener = () => {
+          const key = editButton.getAttribute('data-key');
+          if (key) this.router.navigate(['/createpoint', key]);
+        };
+        editButton.addEventListener('click', listener);
+        (editButton as any)._clickListener = listener;
       }
     });
   }
@@ -125,24 +118,60 @@ export class MapsPage implements OnInit {
   ngOnInit() {
     if (!this.map) {
       setTimeout(() => {
-        this.map = L.map('map').setView([-7.7956, 110.3695], 13);
+        // ✅ Base Layers
+        const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap contributors',
+        });
 
-        var osm = L.tileLayer(
-          'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        const satellite = L.tileLayer(
+          'https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
           {
-            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            attribution: '&copy; Google Satellite',
           }
         );
 
-        osm.addTo(this.map);
+        const terrain = L.tileLayer(
+          'https://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}',
+          {
+            maxZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            attribution: '&copy; Google Terrain',
+          }
+        );
 
+        // ✅ Initialize map
+        this.map = L.map('map', {
+          center: [-7.7956, 110.3695],
+          zoom: 13,
+          layers: [osm, this.pointsLayer], // default layers
+        });
+
+        // ✅ Base and Overlay Layers
+        const baseMaps = {
+          'OpenStreetMap': osm,
+          'Google Satellite': satellite,
+          'Google Terrain': terrain,
+        };
+
+        const overlays = {
+          'Points': this.pointsLayer,
+        };
+
+        // ✅ Add Layer Control
+        L.control.layers(baseMaps, overlays, { position: 'topright' }).addTo(this.map);
+
+        // ✅ Default marker (example)
         L.marker([-7.7956, 110.3695])
           .addTo(this.map)
-          .bindPopup('yogyakarta')
+          .bindPopup('Yogyakarta')
           .openPopup();
 
+        // ✅ Load dynamic points
         this.loadPoints();
       });
     }
   }
 }
+
